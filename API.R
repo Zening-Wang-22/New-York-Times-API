@@ -20,7 +20,7 @@ ui = fluidPage(
   sidebarLayout(
     sidebarPanel(
       dateInput("date", "Date", value = "2019-01-01"), # Date input for user
-      textInput("api", "API Key", value = "FZtw5VD04y6MB2lZJyUrpXdJBWGr3IbR"), # API key input
+      textInput("api", "API Key", value = ""), # API key input
       actionButton("search", "Search") # Search button
     ),
     mainPanel(
