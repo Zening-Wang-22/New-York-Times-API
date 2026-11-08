@@ -11,7 +11,7 @@ library(jsonlite)
 # this will make your get_nyt_articles function available to your
 # shiny app.
 source(
-  knitr::purl("midterm2.qmd", output=tempfile(), quiet=TRUE)
+  knitr::purl("API.qmd", output=tempfile(), quiet=TRUE)
 )
 
 # Define the User Interface (UI) layout
