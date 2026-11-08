@@ -1,39 +1,113 @@
-### Data Retrieval from the New York Times API
+# 📰 New York Times Explorer
 
-This repository includes a function `get_nyt_articles` designed to fetch articles from the New York Times (NYT) API. It accepts four parameters: `year`, `month`, `day`, and `api_key`. Below are the steps and methodologies used in the function:
+An R Shiny app for exploring New York Times articles by date. The project combines API requests, pagination, JSON processing, and an interactive interface for browsing article summaries.
 
-#### Function Design
-- **Input Validation**: Checks are implemented to ensure that `year`, `month`, and `day` are numeric and fall within valid ranges. The `api_key` is validated to be a string, essential for API authentication.
-- **URL Construction**: Utilizes the `sprintf` function to format the date as required by the NYT API and the `glue` function to construct the request URL with query parameters.
-- **Data Initialization**: Begins with an empty dataframe to store results. The initial API call is to fetch the total number of articles available for the specified date.
-- **Pagination Handling**: Incorporates a repeat loop to handle API pagination, fetching 10 documents per request. For each new page, the URL is adjusted to include the page number, and data is fetched and processed.
-- **Data Transformation**: Transforms the nested JSON data into a tidy dataframe using `tibble` and `tidyr`, selecting columns such as headline, byline, web_url, lead_paragraph, source, and multimedia.
-- **Rate Limiting**: Includes a `Sys.sleep(6)` call within the loop to adhere to API rate limits, ensuring the function pauses for 6 seconds between requests.
+The current query retrieves articles matching the selected date and filters for **print section A, page 1**. It does not retrieve every article published that day.
 
-#### Data Output
-- Returns a dataframe containing all articles from the specified date. If no articles are available, returns an empty dataframe with NA values.
+**Built with:** R · Shiny · jsonlite · dplyr · tidyr  
+**Focus:** API integration · Data retrieval · Interactive exploration
 
-### Shiny Application for NYT Data Retrieval
+## Features
 
-This Shiny application provides a user-friendly interface for interacting with the NYT API using the `get_nyt_articles` function.
+- **Search by date:** Select a date and provide your own NYT API key.
+- **Browse headlines:** View matching articles as clickable titles.
+- **Explore article details:** Open a headline to see its byline, lead paragraph, and an image when available.
+- **Read the original article:** Follow the link to the New York Times website.
 
-#### Library Setup
-- Essential R libraries such as `shiny`, `dplyr`, and `tidyr` are loaded. The custom function `get_nyt_articles` is sourced from `midterm2.qmd`.
+## Run locally
 
-#### User Interface
-- **UI Layout**: Implemented using `fluidPage` for a clean layout, featuring a title panel, sidebar for inputs, and a main panel for results.
-- **Input Handling**: Users can input a date and their API key to fetch articles. A button initiates the data retrieval.
+### 1. Download the repository
 
-#### Server Logic
-- **Reactive Values**: Manages application state and dynamic UI elements.
-- **Error Handling**: Uses `tryCatch` to gracefully handle errors, including invalid API key notifications.
-- **Dynamic Content**: Articles are listed with clickable links. Clicking a link opens a modal dialog with detailed article information.
-- **Multimedia Handling**: Checks for multimedia content and displays the first image if available, with a fallback to a default NYT image.
+Clone the repository or download and extract its ZIP file. Open `API.Rproj` in RStudio.
 
-### Installation and Usage
-To run the Shiny application:
-1. Clone this repository.
-2. Ensure you have the required R libraries installed.
-3. Run the Shiny app script provided in the repository.
+### 2. Install dependencies
 
-This repository and the accompanying Shiny application provide a robust toolset for retrieving and displaying articles from the New York Times API, with considerations for user experience and API constraints.
+Run the following in the R console:
+
+```r
+install.packages(c(
+  "shiny", "dplyr", "tidyr", "stringr",
+  "purrr", "glue", "jsonlite", "knitr",
+  "tidyverse"
+))
+```
+
+### 3. Configure your API key
+
+Obtain your own API key from the [New York Times Developer Portal](https://developer.nytimes.com/) with access to the Article Search API.
+
+Before running or sharing the app, remove any existing key from the input's default value. An empty password field avoids displaying the entered key on screen:
+
+```r
+passwordInput("api", "API Key", value = "")
+```
+
+Do not commit API keys to the repository.
+
+### 4. Launch the app
+
+Open `API.R` and click **Run App**. Select a date, enter your API key, and click **Search**.
+
+Click a headline to open its details, then select **Read full article** to visit the original page. Access to the full article depends on the publisher’s access policies.
+
+## How it works
+
+### Request construction
+
+The function accepts four arguments:
+
+```r
+get_nyt_articles(year, month, day, api_key)
+```
+
+It checks input types and basic month and day ranges, formats the date, and constructs an Article Search API request.
+
+The query uses the same beginning and ending date and applies these filters:
+
+- Document type: article
+- Print section: A
+- Print page: 1
+
+The current validation does not fully check calendar dates, such as whether a particular month has 31 days.
+
+### Pagination and data processing
+
+An initial request reads the reported number of matches. The function then requests successive pages, assuming 10 articles per page, and combines the results into a data frame.
+
+Selected fields include:
+
+| Field | Content |
+|---|---|
+| `headline` | Headline information |
+| `byline` | Author information |
+| `web_url` | Link to the original article |
+| `lead_paragraph` | Opening paragraph |
+| `source` | Article source |
+| `multimedia` | Associated media metadata |
+
+Some fields retain nested structures from the API response.
+
+When no matches are reported, the current function returns a single row of `NA` values, which the interface treats as a no-results response.
+
+### Interactive browsing
+
+Shiny renders the retrieved headlines as clickable links. Selecting a headline opens a detail window with article information and an image when available. The app includes a fallback image for missing multimedia.
+
+## Main files
+
+| File | Purpose |
+|---|---|
+| `API.R` | Shiny interface and server logic |
+| `API.qmd` | Article retrieval function and supporting code |
+| `API.Rproj` | RStudio project |
+| `README.md` | Project documentation |
+
+## Limitations and next steps
+
+- **Request pacing:** The pagination loop includes a six-second pause between subsequent page requests. This fixed delay does not guarantee compliance with current API limits.
+- **Error handling:** The current handler addresses warnings but does not provide comprehensive handling of request errors, timeouts, or rate-limit responses.
+- **Response compatibility:** Changes to the API response structure may require updates to article and multimedia processing.
+- **Empty results:** Returning a consistent zero-row data frame would simplify downstream handling.
+- **Query flexibility:** Future versions could let users choose between the current front-page filter and a broader article search.
+
+Further improvements include validating complete calendar dates, checking images article by article, and adding tests with saved API responses.
